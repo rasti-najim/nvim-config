@@ -83,6 +83,12 @@ vim.api.nvim_create_autocmd('LspAttach', {
   end,
 })
 
+-- fzf-lua keybindings
+vim.keymap.set('n', '<leader>ff', '<cmd>FzfLua files<cr>')
+vim.keymap.set('n', '<leader>fg', '<cmd>FzfLua live_grep<cr>')
+vim.keymap.set('n', '<leader>fb', '<cmd>FzfLua buffers<cr>')
+vim.keymap.set('n', '<leader>fh', '<cmd>FzfLua helptags<cr>')
+
 -- AUTOCOMMANDS (EVENT HANDLERS)
 --
 -- See `:h lua-guide-autocommands`, `:h autocmd`, `:h nvim_create_autocmd()`
