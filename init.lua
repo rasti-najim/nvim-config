@@ -97,41 +97,30 @@ vim.api.nvim_create_user_command('GitBlameLine', function()
 end, { desc = 'Print the git blame for the current line' })
 
 -- PLUGINS
---
--- See `:h :packadd`, `:h vim.pack`
 
 -- Add the "nohlsearch" package to automatically disable search highlighting after
 -- 'updatetime' and when going to insert mode.
 vim.cmd('packadd! nohlsearch')
 
--- Install third-party plugins via "vim.pack.add()".
-vim.pack.add({
-  -- Quickstart configs for LSP
-  'https://github.com/neovim/nvim-lspconfig',
-  -- Fuzzy picker
-  'https://github.com/ibhagwan/fzf-lua',
-  -- Autocompletion
-  'https://github.com/nvim-mini/mini.completion',
-  -- Enhanced quickfix/loclist
-  'https://github.com/stevearc/quicker.nvim',
-  -- Git integration
-  'https://github.com/lewis6991/gitsigns.nvim',
-})
-
-require('fzf-lua').setup { fzf_colors = true }
-require('mini.completion').setup {}
-require('quicker').setup {}
-require('gitsigns').setup {}
-
--- Setup lazy.nvim
 require("lazy").setup({
-  spec = {
-    -- add your plugins here
-    
+  -- Quickstart configs for LSP
+  { 'neovim/nvim-lspconfig' },
+  -- Fuzzy picker
+  { 'ibhagwan/fzf-lua', config = function() require('fzf-lua').setup { fzf_colors = true } end },
+  -- Autocompletion
+  { 'echasnovski/mini.completion', config = function() require('mini.completion').setup {} end },
+  -- Enhanced quickfix/loclist
+  { 'stevearc/quicker.nvim', config = function() require('quicker').setup {} end },
+  -- Git integration
+  { 'lewis6991/gitsigns.nvim', config = function() require('gitsigns').setup {} end },
+  -- Treesitter: syntax highlighting, indentation, text objects
+  { 'nvim-treesitter/nvim-treesitter',
+    build = ':TSUpdate',
+    config = function()
+      require('nvim-treesitter').setup {
+        ensure_installed = { 'lua', 'vim', 'vimdoc', 'query', 'markdown', 'markdown_inline' },
+        auto_install = true,
+      }
+    end,
   },
-  -- Configure any other settings here. See the documentation for more details.
-  -- colorscheme that will be used when installing plugins.
-  install = { colorscheme = { "habamax" } },
-  -- automatically check for plugin updates
-  checker = { enabled = true },
 })
