@@ -15,8 +15,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 
-
--- Set <space> as the leader key
+--- Set <space> as the leader key
 -- See `:h mapleader`
 -- NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
@@ -108,6 +107,9 @@ vim.api.nvim_create_user_command('GitBlameLine', function()
   print(vim.system({ 'git', 'blame', '-L', line_number .. ',+1', filename }):wait().stdout)
 end, { desc = 'Print the git blame for the current line' })
 
+-- LSP SERVERS
+vim.lsp.enable({ 'lua_ls', 'pyright', 'ts_ls', 'gopls', 'rust_analyzer', 'clangd' })
+
 -- PLUGINS
 
 -- Add the "nohlsearch" package to automatically disable search highlighting after
@@ -116,23 +118,7 @@ vim.cmd('packadd! nohlsearch')
 
 require("lazy").setup({
   -- Quickstart configs for LSP
-  { 'neovim/nvim-lspconfig',
-    config = function()
-      local lspconfig = require('lspconfig')
-      -- Lua
-      lspconfig.lua_ls.setup {}
-      -- Python
-      lspconfig.pyright.setup {}
-      -- TypeScript / JavaScript
-      lspconfig.ts_ls.setup {}
-      -- Go
-      lspconfig.gopls.setup {}
-      -- Rust
-      lspconfig.rust_analyzer.setup {}
-      -- C / C++
-      lspconfig.clangd.setup {}
-    end,
-  },
+  { 'neovim/nvim-lspconfig' },
   -- Fuzzy picker
   { 'ibhagwan/fzf-lua', config = function() require('fzf-lua').setup { fzf_colors = true } end },
   -- Autocompletion
