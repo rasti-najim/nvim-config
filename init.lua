@@ -72,6 +72,18 @@ vim.o.confirm = true
 -- Use <Esc> to exit terminal mode
 vim.keymap.set('t', '<Esc>', '<C-\\><C-n>')
 
+-- LSP keybindings (active when a language server attaches to a buffer)
+vim.api.nvim_create_autocmd('LspAttach', {
+  callback = function(args)
+    local opts = { buffer = args.buf }
+    vim.keymap.set('n', 'gd', vim.lsp.buf.definition, opts)
+    vim.keymap.set('n', 'gr', vim.lsp.buf.references, opts)
+    vim.keymap.set('n', 'K', vim.lsp.buf.hover, opts)
+    vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
+    vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, opts)
+  end,
+})
+
 -- AUTOCOMMANDS (EVENT HANDLERS)
 --
 -- See `:h lua-guide-autocommands`, `:h autocmd`, `:h nvim_create_autocmd()`
@@ -104,7 +116,23 @@ vim.cmd('packadd! nohlsearch')
 
 require("lazy").setup({
   -- Quickstart configs for LSP
-  { 'neovim/nvim-lspconfig' },
+  { 'neovim/nvim-lspconfig',
+    config = function()
+      local lspconfig = require('lspconfig')
+      -- Lua
+      lspconfig.lua_ls.setup {}
+      -- Python
+      lspconfig.pyright.setup {}
+      -- TypeScript / JavaScript
+      lspconfig.ts_ls.setup {}
+      -- Go
+      lspconfig.gopls.setup {}
+      -- Rust
+      lspconfig.rust_analyzer.setup {}
+      -- C / C++
+      lspconfig.clangd.setup {}
+    end,
+  },
   -- Fuzzy picker
   { 'ibhagwan/fzf-lua', config = function() require('fzf-lua').setup { fzf_colors = true } end },
   -- Autocompletion
