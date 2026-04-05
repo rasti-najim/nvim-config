@@ -92,6 +92,9 @@ vim.keymap.set('n', '<leader>fh', '<cmd>FzfLua helptags<cr>')
 -- File explorer
 vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeToggle<cr>')
 
+-- Format
+vim.keymap.set('n', '<leader>cf', function() require('conform').format() end)
+
 -- AUTOCOMMANDS (EVENT HANDLERS)
 --
 -- See `:h lua-guide-autocommands`, `:h autocmd`, `:h nvim_create_autocmd()`
@@ -207,6 +210,33 @@ require("lazy").setup({
   { 'nvim-lualine/lualine.nvim',
     dependencies = { 'nvim-tree/nvim-web-devicons' },
     config = function() require('lualine').setup {} end,
+  },
+  -- Formatting
+  { 'stevearc/conform.nvim',
+    event = 'BufWritePre',
+    config = function()
+      require('conform').setup {
+        formatters_by_ft = {
+          lua = { 'stylua' },
+          python = { 'black' },
+          javascript = { 'prettier' },
+          typescript = { 'prettier' },
+          javascriptreact = { 'prettier' },
+          typescriptreact = { 'prettier' },
+          html = { 'prettier' },
+          css = { 'prettier' },
+          json = { 'prettier' },
+          go = { 'gofmt' },
+          rust = { 'rustfmt' },
+          c = { 'clang-format' },
+          cpp = { 'clang-format' },
+        },
+        format_on_save = {
+          timeout_ms = 500,
+          lsp_fallback = true,
+        },
+      }
+    end,
   },
   -- Treesitter: syntax highlighting, indentation, text objects
   { 'nvim-treesitter/nvim-treesitter',
