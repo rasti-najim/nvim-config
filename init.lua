@@ -278,6 +278,16 @@ require("lazy").setup({
 			require("bufferline").setup({})
 		end,
 	},
+	-- Floating terminal
+	{
+		"akinsho/toggleterm.nvim",
+		config = function()
+			require("toggleterm").setup({
+				open_mapping = "<C-\\>",
+				direction = "float",
+			})
+		end,
+	},
 	-- Statusline
 	{
 		"nvim-lualine/lualine.nvim",
