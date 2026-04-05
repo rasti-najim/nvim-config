@@ -146,6 +146,12 @@ end, { desc = "Print the git blame for the current line" })
 -- LSP SERVERS
 vim.lsp.enable({ "lua_ls", "pyright", "ts_ls", "gopls", "rust_analyzer", "clangd" })
 
+-- CUSTOM MODULES
+require("markdown-tools").setup({
+	calendar_name = "Home", -- change to your calendar name
+	keymap = "<leader>mc",
+})
+
 -- PLUGINS
 
 -- Add the "nohlsearch" package to automatically disable search highlighting after
