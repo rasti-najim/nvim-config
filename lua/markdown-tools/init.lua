@@ -2,6 +2,75 @@ local M = {}
 
 M.calendar = require("markdown-tools.calendar")
 
+local ns = vim.api.nvim_create_namespace("markdown-tools-cal")
+local state_dir = vim.fn.stdpath("data") .. "/markdown-tools"
+local state_file = state_dir .. "/scheduled.json"
+
+local function load_state()
+	local f = io.open(state_file, "r")
+	if not f then
+		return {}
+	end
+	local content = f:read("*a")
+	f:close()
+	local ok, data = pcall(vim.json.decode, content)
+	if ok and data then
+		return data
+	end
+	return {}
+end
+
+local function save_state(state)
+	vim.fn.mkdir(state_dir, "p")
+	local f = io.open(state_file, "w")
+	if f then
+		f:write(vim.json.encode(state))
+		f:close()
+	end
+end
+
+local function mark_line(buf, line_num)
+	vim.api.nvim_buf_set_extmark(buf, ns, line_num - 1, 0, {
+		sign_text = "ok",
+		sign_hl_group = "DiagnosticOk",
+		virt_text = { { " (scheduled)", "DiagnosticOk" } },
+		virt_text_pos = "eol",
+	})
+end
+
+local function restore_marks(buf, filepath)
+	local state = load_state()
+	local scheduled = state[filepath]
+	if not scheduled then
+		return
+	end
+	local line_count = vim.api.nvim_buf_line_count(buf)
+	for _, line_text in ipairs(scheduled) do
+		local lines = vim.api.nvim_buf_get_lines(buf, 0, line_count, false)
+		for i, l in ipairs(lines) do
+			if l == line_text then
+				mark_line(buf, i)
+				break
+			end
+		end
+	end
+end
+
+local function record_scheduled(filepath, line_text)
+	local state = load_state()
+	if not state[filepath] then
+		state[filepath] = {}
+	end
+	-- avoid duplicates
+	for _, existing in ipairs(state[filepath]) do
+		if existing == line_text then
+			return
+		end
+	end
+	table.insert(state[filepath], line_text)
+	save_state(state)
+end
+
 function M.setup(opts)
 	opts = opts or {}
 	local calendar_name = opts.calendar_name or "Calendar"
@@ -10,15 +79,19 @@ function M.setup(opts)
 	vim.api.nvim_create_user_command("MarkdownCal", function(args)
 		local start_line = args.range == 0 and vim.fn.line(".") or args.line1
 		local end_line = args.range == 0 and vim.fn.line(".") or args.line2
+		local buf = vim.api.nvim_get_current_buf()
+		local filepath = vim.api.nvim_buf_get_name(buf)
 		local lines = vim.api.nvim_buf_get_lines(0, start_line - 1, end_line, false)
 
-		for _, line in ipairs(lines) do
+		for i, line in ipairs(lines) do
 			local event, err = M.calendar.parse_line(line)
 			if not event then
 				vim.notify(err, vim.log.levels.ERROR)
 			else
 				local ok, create_err = M.calendar.create_event(event, calendar_name)
 				if ok then
+					mark_line(buf, start_line + i - 1)
+					record_scheduled(filepath, line)
 					vim.notify(
 						string.format(
 							"Created: %s on %s %d:%02d-%d:%02d",
@@ -43,6 +116,11 @@ function M.setup(opts)
 		callback = function(args)
 			vim.keymap.set("n", keymap, "<cmd>MarkdownCal<cr>", { buffer = args.buf, desc = "Create calendar event" })
 			vim.keymap.set("v", keymap, ":MarkdownCal<cr>", { buffer = args.buf, desc = "Create calendar event" })
+			-- restore marks for previously scheduled lines
+			local filepath = vim.api.nvim_buf_get_name(args.buf)
+			if filepath ~= "" then
+				restore_marks(args.buf, filepath)
+			end
 		end,
 	})
 end
