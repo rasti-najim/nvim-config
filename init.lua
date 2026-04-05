@@ -95,6 +95,11 @@ vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeToggle<cr>')
 -- Format
 vim.keymap.set('n', '<leader>cf', function() require('conform').format() end)
 
+-- Diagnostics
+vim.keymap.set('n', '<leader>d', vim.diagnostic.open_float)
+vim.keymap.set('n', '[d', vim.diagnostic.goto_prev)
+vim.keymap.set('n', ']d', vim.diagnostic.goto_next)
+
 -- AUTOCOMMANDS (EVENT HANDLERS)
 --
 -- See `:h lua-guide-autocommands`, `:h autocmd`, `:h nvim_create_autocmd()`
@@ -236,6 +241,23 @@ require("lazy").setup({
           lsp_fallback = true,
         },
       }
+    end,
+  },
+  -- Linting
+  { 'mfussenegger/nvim-lint',
+    event = { 'BufReadPre', 'BufNewFile' },
+    config = function()
+      local lint = require('lint')
+      lint.linters_by_ft = {
+        python = { 'ruff' },
+        javascript = { 'eslint_d' },
+        typescript = { 'eslint_d' },
+        javascriptreact = { 'eslint_d' },
+        typescriptreact = { 'eslint_d' },
+      }
+      vim.api.nvim_create_autocmd({ 'BufWritePost', 'BufReadPost', 'InsertLeave' }, {
+        callback = function() lint.try_lint() end,
+      })
     end,
   },
   -- Treesitter: syntax highlighting, indentation, text objects
