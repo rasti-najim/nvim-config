@@ -114,6 +114,11 @@ vim.keymap.set("n", "<leader>hp", "<cmd>Gitsigns preview_hunk<cr>")
 vim.keymap.set("n", "<leader>hb", "<cmd>Gitsigns blame_line<cr>")
 vim.keymap.set("n", "<leader>hd", "<cmd>Gitsigns diffthis<cr>")
 
+-- Buffer tabs
+vim.keymap.set("n", "<S-l>", "<cmd>BufferLineCycleNext<cr>")
+vim.keymap.set("n", "<S-h>", "<cmd>BufferLineCyclePrev<cr>")
+vim.keymap.set("n", "<leader>x", "<cmd>bdelete<cr>")
+
 -- AUTOCOMMANDS (EVENT HANDLERS)
 --
 -- See `:h lua-guide-autocommands`, `:h autocmd`, `:h nvim_create_autocmd()`
@@ -263,6 +268,14 @@ require("lazy").setup({
 		event = "VeryLazy",
 		config = function()
 			require("which-key").setup({})
+		end,
+	},
+	-- Buffer tabs
+	{
+		"akinsho/bufferline.nvim",
+		dependencies = { "nvim-tree/nvim-web-devicons" },
+		config = function()
+			require("bufferline").setup({})
 		end,
 	},
 	-- Statusline
