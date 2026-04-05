@@ -132,7 +132,38 @@ require("lazy").setup({
   -- Fuzzy picker
   { 'ibhagwan/fzf-lua', config = function() require('fzf-lua').setup { fzf_colors = true } end },
   -- Autocompletion
-  { 'echasnovski/mini.completion', config = function() require('mini.completion').setup {} end },
+  { 'hrsh7th/nvim-cmp',
+    dependencies = {
+      'hrsh7th/cmp-nvim-lsp',
+      'hrsh7th/cmp-buffer',
+      'hrsh7th/cmp-path',
+      'L3MON4D3/LuaSnip',
+      'saadparwaiz1/cmp_luasnip',
+    },
+    config = function()
+      local cmp = require('cmp')
+      local luasnip = require('luasnip')
+      cmp.setup {
+        snippet = {
+          expand = function(args) luasnip.lsp_expand(args.body) end,
+        },
+        mapping = cmp.mapping.preset.insert({
+          ['<C-n>'] = cmp.mapping.select_next_item(),
+          ['<C-p>'] = cmp.mapping.select_prev_item(),
+          ['<C-d>'] = cmp.mapping.scroll_docs(4),
+          ['<C-u>'] = cmp.mapping.scroll_docs(-4),
+          ['<C-Space>'] = cmp.mapping.complete(),
+          ['<CR>'] = cmp.mapping.confirm({ select = true }),
+        }),
+        sources = {
+          { name = 'nvim_lsp' },
+          { name = 'luasnip' },
+          { name = 'buffer' },
+          { name = 'path' },
+        },
+      }
+    end,
+  },
   -- Enhanced quickfix/loclist
   { 'stevearc/quicker.nvim', config = function() require('quicker').setup {} end },
   -- Git integration
