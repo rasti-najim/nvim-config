@@ -89,6 +89,9 @@ vim.keymap.set('n', '<leader>fg', '<cmd>FzfLua live_grep<cr>')
 vim.keymap.set('n', '<leader>fb', '<cmd>FzfLua buffers<cr>')
 vim.keymap.set('n', '<leader>fh', '<cmd>FzfLua helptags<cr>')
 
+-- File explorer
+vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeToggle<cr>')
+
 -- AUTOCOMMANDS (EVENT HANDLERS)
 --
 -- See `:h lua-guide-autocommands`, `:h autocmd`, `:h nvim_create_autocmd()`
@@ -123,6 +126,7 @@ vim.lsp.enable({ 'lua_ls', 'pyright', 'ts_ls', 'gopls', 'rust_analyzer', 'clangd
 vim.cmd('packadd! nohlsearch')
 
 require("lazy").setup({
+  rocks = { enabled = true },
   -- Quickstart configs for LSP
   { 'neovim/nvim-lspconfig' },
   -- Fuzzy picker
@@ -133,6 +137,41 @@ require("lazy").setup({
   { 'stevearc/quicker.nvim', config = function() require('quicker').setup {} end },
   -- Git integration
   { 'lewis6991/gitsigns.nvim', config = function() require('gitsigns').setup {} end },
+  -- Note-taking and organization
+  { 'nvim-neorg/neorg',
+    lazy = false,
+    version = '*',
+    rocks = { 'tree-sitter-norg' },
+    config = function()
+      require('neorg').setup {
+        load = {
+          ['core.defaults'] = {},
+          ['core.concealer'] = {},
+          ['core.dirman'] = {
+            config = {
+              workspaces = {
+                notes = '~/notes',
+              },
+              default_workspace = 'notes',
+            },
+          },
+        },
+      }
+      vim.wo.foldlevel = 99
+      vim.wo.conceallevel = 2
+    end,
+  },
+  -- Auto-pairs
+  { 'windwp/nvim-autopairs', event = 'InsertEnter', config = function() require('nvim-autopairs').setup {} end },
+  -- Surround (add/change/delete surrounding pairs)
+  { 'kylechui/nvim-surround', event = 'VeryLazy', config = function() require('nvim-surround').setup {} end },
+  -- File explorer
+  { 'nvim-tree/nvim-tree.lua',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function() require('nvim-tree').setup {} end,
+  },
+  -- Which-key (shows available keybindings)
+  { 'folke/which-key.nvim', event = 'VeryLazy', config = function() require('which-key').setup {} end },
   -- Treesitter: syntax highlighting, indentation, text objects
   { 'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
