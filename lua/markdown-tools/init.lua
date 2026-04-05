@@ -38,8 +38,13 @@ function M.setup(opts)
 		end
 	end, { range = true, desc = "Create calendar event from current line" })
 
-	vim.keymap.set("n", keymap, "<cmd>MarkdownCal<cr>", { desc = "Create calendar event" })
-	vim.keymap.set("v", keymap, ":MarkdownCal<cr>", { desc = "Create calendar event" })
+	vim.api.nvim_create_autocmd("FileType", {
+		pattern = { "markdown", "norg" },
+		callback = function(args)
+			vim.keymap.set("n", keymap, "<cmd>MarkdownCal<cr>", { buffer = args.buf, desc = "Create calendar event" })
+			vim.keymap.set("v", keymap, ":MarkdownCal<cr>", { buffer = args.buf, desc = "Create calendar event" })
+		end,
+	})
 end
 
 return M
