@@ -172,6 +172,11 @@ require("lazy").setup({
   },
   -- Which-key (shows available keybindings)
   { 'folke/which-key.nvim', event = 'VeryLazy', config = function() require('which-key').setup {} end },
+  -- Statusline
+  { 'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function() require('lualine').setup {} end,
+  },
   -- Treesitter: syntax highlighting, indentation, text objects
   { 'nvim-treesitter/nvim-treesitter',
     build = ':TSUpdate',
