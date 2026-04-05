@@ -144,4 +144,48 @@ end tell
 	return true
 end
 
+-- Delete a calendar event by title and date via AppleScript
+function M.delete_event(event, calendar_name)
+	calendar_name = calendar_name or "Calendar"
+
+	local script = string.format(
+		[[
+tell application "Calendar"
+  tell calendar "%s"
+    set startDate to current date
+    set year of startDate to %s
+    set month of startDate to %s
+    set day of startDate to %s
+    set hours of startDate to 0
+    set minutes of startDate to 0
+    set seconds of startDate to 0
+
+    set endDate to startDate + (1 * days)
+
+    set matchingEvents to (every event whose summary is "%s" and start date >= startDate and start date < endDate)
+    repeat with e in matchingEvents
+      delete e
+    end repeat
+    return (count of matchingEvents) as text
+  end tell
+end tell
+]],
+		calendar_name,
+		event.date:sub(1, 4),
+		tonumber(event.date:sub(6, 7)),
+		tonumber(event.date:sub(9, 10)),
+		event.title:gsub('"', '\\"')
+	)
+
+	local result = vim.system({ "osascript", "-e", script }):wait()
+	if result.code ~= 0 then
+		return false, "AppleScript error: " .. (result.stderr or "unknown error")
+	end
+	local count = tonumber(result.stdout:match("%d+")) or 0
+	if count == 0 then
+		return false, "No matching event found"
+	end
+	return true
+end
+
 return M

@@ -56,6 +56,36 @@ local function restore_marks(buf, filepath)
 	end
 end
 
+local function remove_scheduled(filepath, line_text)
+	local state = load_state()
+	if not state[filepath] then
+		return
+	end
+	for i, existing in ipairs(state[filepath]) do
+		if existing == line_text then
+			table.remove(state[filepath], i)
+			break
+		end
+	end
+	if #state[filepath] == 0 then
+		state[filepath] = nil
+	end
+	save_state(state)
+end
+
+local function unmark_line(buf, line_num)
+	local marks = vim.api.nvim_buf_get_extmarks(buf, ns, { line_num - 1, 0 }, { line_num - 1, -1 }, {})
+	for _, mark in ipairs(marks) do
+		vim.api.nvim_buf_del_extmark(buf, ns, mark[1])
+	end
+	vim.api.nvim_buf_set_extmark(buf, ns, line_num - 1, 0, {
+		sign_text = "xx",
+		sign_hl_group = "DiagnosticError",
+		virt_text = { { " (deleted)", "DiagnosticError" } },
+		virt_text_pos = "eol",
+	})
+end
+
 local function record_scheduled(filepath, line_text)
 	local state = load_state()
 	if not state[filepath] then
@@ -111,11 +141,34 @@ function M.setup(opts)
 		end
 	end, { range = true, desc = "Create calendar event from current line" })
 
+	vim.api.nvim_create_user_command("MarkdownCalDelete", function(args)
+		local line_num = args.range == 0 and vim.fn.line(".") or args.line1
+		local buf = vim.api.nvim_get_current_buf()
+		local filepath = vim.api.nvim_buf_get_name(buf)
+		local line = vim.api.nvim_buf_get_lines(buf, line_num - 1, line_num, false)[1]
+
+		local event, err = M.calendar.parse_line(line)
+		if not event then
+			vim.notify(err, vim.log.levels.ERROR)
+			return
+		end
+
+		local ok, del_err = M.calendar.delete_event(event, calendar_name)
+		if ok then
+			unmark_line(buf, line_num)
+			remove_scheduled(filepath, line)
+			vim.notify("Deleted: " .. event.title, vim.log.levels.INFO)
+		else
+			vim.notify(del_err, vim.log.levels.ERROR)
+		end
+	end, { range = true, desc = "Delete calendar event from current line" })
+
 	vim.api.nvim_create_autocmd("FileType", {
 		pattern = { "markdown", "norg" },
 		callback = function(args)
 			vim.keymap.set("n", keymap, "<cmd>MarkdownCal<cr>", { buffer = args.buf, desc = "Create calendar event" })
 			vim.keymap.set("v", keymap, ":MarkdownCal<cr>", { buffer = args.buf, desc = "Create calendar event" })
+			vim.keymap.set("n", "<leader>md", "<cmd>MarkdownCalDelete<cr>", { buffer = args.buf, desc = "Delete calendar event" })
 			-- restore marks for previously scheduled lines
 			local filepath = vim.api.nvim_buf_get_name(args.buf)
 			if filepath ~= "" then
