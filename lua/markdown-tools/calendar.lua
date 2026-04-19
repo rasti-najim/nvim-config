@@ -48,7 +48,23 @@ local function parse_time(str)
 	return { hour = hour, min = min }
 end
 
--- Parse a line like "Task name @ 3pm-4pm" or "Task name @ 2025-01-20 3pm-4pm"
+local script_dir = debug.getinfo(1, "S").source:match("@(.*/)")
+
+-- Use Python dateutil to parse natural language dates
+local function parse_natural_date(rest)
+	local script = script_dir .. "bin/parse_date.py"
+	local result = vim.system({ "python3", script, rest }):wait()
+	if result.code ~= 0 then
+		return nil
+	end
+	local ok, data = pcall(vim.json.decode, result.stdout)
+	if not ok or data.error then
+		return nil
+	end
+	return data
+end
+
+-- Parse a line like "Task name @ 3pm-4pm" or "Task name @ tomorrow 3pm-4pm"
 function M.parse_line(line)
 	local title, rest = line:match("^(.-)%s*@%s*(.+)$")
 	if not title or not rest then
@@ -64,12 +80,20 @@ function M.parse_line(line)
 
 	local date, time_range
 
-	-- Try: 2025-01-20 3pm-4pm
+	-- Try: 2025-01-20 3pm-4pm (explicit date)
 	date, time_range = rest:match("^(%d%d%d%d%-%d%d%-%d%d)%s+(.+)$")
+
 	if not date then
-		-- No date, just time range — default to today
-		date = os.date("%Y-%m-%d")
-		time_range = rest
+		-- Try natural language via Python (tomorrow, next friday, etc.)
+		local parsed = parse_natural_date(rest)
+		if parsed then
+			date = parsed.date
+			time_range = parsed.start_time .. "-" .. parsed.end_time
+		else
+			-- No date, just time range — default to today
+			date = os.date("%Y-%m-%d")
+			time_range = rest
+		end
 	end
 
 	local start_str, end_str = time_range:match("^(.+)-(.+)$")
